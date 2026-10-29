@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { getDictionary } from "@/i18n/dictionaries";
 import { locales, type Locale } from "@/i18n/config";
+import { createClient } from "@/lib/supabase/server";
+import { logout } from "@/app/auth/actions";
+import { ensureProfile } from "@/lib/auth/profile";
 
 export const instant = false;
 
@@ -20,6 +23,18 @@ export default async function DashboardPage({
   const { locale: rawLocale } = await params;
   if (!locales.includes(rawLocale as Locale)) notFound();
   const locale = rawLocale as Locale;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+
+  if (error || !userId) {
+    redirect(`/${locale}/login`);
+  }
+
+  const email = typeof data.claims.email === "string" ? data.claims.email : undefined;
+  await ensureProfile(userId, email, locale);
+
   const t = getDictionary(locale).dashboard;
   return (
     <main className="dashboard-shell">
@@ -37,6 +52,10 @@ export default async function DashboardPage({
           <Link className="text-link" href={`/${locale}`}>
             ← Home
           </Link>
+          <form action={logout}>
+            <input type="hidden" name="locale" value={locale} />
+            <button className="logout-button" type="submit">Sign out</button>
+          </form>
         </div>
       </header>
       <section className="dashboard-intro dashboard-wide">
