@@ -1,24 +1,10 @@
-import Link from "next/link";
-import type { Locale } from "@/i18n/config";
-
-const staffRoles = new Set(["SUPERADMIN", "ADMIN", "OPERATIONS", "TRANSCRIBER", "TRANSLATOR", "REVIEWER", "QUALITY_REVIEWER"]);
-
-export function DashboardSidebar({ locale, roles }: { locale: Locale; roles: string[] }) {
-  const isStaff = roles.some((role) => staffRoles.has(role));
-  const isAdmin = roles.some((role) => role === "SUPERADMIN" || role === "ADMIN");
-  const isOperations = roles.some((role) => ["SUPERADMIN", "ADMIN", "OPERATIONS"].includes(role));
-  return <aside className="portal-sidebar">
-    <Link className="brand portal-brand" href={`/${locale}`}><span className="brand-mark"><i/><i/><i/></span><span>MboaScribe</span></Link>
-    <nav className="portal-nav" aria-label="Dashboard">
-      <Link className="active" href={`/${locale}/dashboard`}>⌂ <span>Overview</span></Link>
-      <Link href={`/${locale}/dashboard/new-order`}>＋ <span>New order</span></Link>
-      <Link href={`/${locale}/dashboard/orders`}>▤ <span>My orders</span></Link>
-      <Link href={`/${locale}/dashboard`}>▣ <span>Files & deliveries</span></Link>
-      <Link href={`/${locale}/dashboard`}>◈ <span>Payments</span></Link>
-      {isStaff && <div className="portal-nav-group"><small>WORKSPACE</small><Link href={`/${locale}/dashboard/tasks`}>✓ <span>My tasks</span></Link></div>}
-      {isOperations && <div className="portal-nav-group"><small>OPERATIONS</small><Link href={`/${locale}/dashboard/admin/tasks`}>☑ <span>Task queue</span></Link></div>}
-      {isAdmin && <div className="portal-nav-group"><small>ADMINISTRATION</small><Link href={`/${locale}/dashboard/admin/task-types`}>☷ <span>Task types</span></Link><Link href={`/${locale}/dashboard`}>♙ <span>Users & roles</span></Link><Link href={`/${locale}/dashboard`}>⚙ <span>Operations</span></Link></div>}
-    </nav>
-    <div className="portal-sidebar-foot"><span className="security-dot"/> Private workspace</div>
-  </aside>;
-}
+import Link from "next/link"; import type { Locale } from "@/i18n/config";
+type P={locale:Locale;roles:string[];permissions?:Set<string>};
+export function DashboardSidebar({locale,roles,permissions=new Set()}:P){const has=(p:string)=>roles.includes("SUPERADMIN")||permissions.has(p);const workforce=has("tasks.work");const customer=!roles.some(r=>["SUPERADMIN","ADMIN","OPERATIONS","TRANSCRIBER","TRANSLATOR","REVIEWER","QUALITY_REVIEWER"].includes(r));return <aside className="portal-sidebar"><Link className="brand portal-brand" href={`/${locale}`}><span className="brand-mark"><i/><i/><i/></span><span>MboaScribe</span></Link><nav className="portal-nav" aria-label="Dashboard">
+<Link href={`/${locale}/dashboard`}>⌂ <span>Overview</span></Link>
+{customer&&<><Link href={`/${locale}/dashboard/new-order`}>＋ <span>New order</span></Link><Link href={`/${locale}/dashboard/orders`}>▤ <span>My orders</span></Link><Link href={`/${locale}/dashboard/files`}>▣ <span>Files & deliveries</span></Link><Link href={`/${locale}/dashboard/payments`}>◈ <span>Payments</span></Link></>}
+{workforce&&<div className="portal-nav-group"><small>MY WORK</small><Link href={`/${locale}/dashboard/tasks`}>✓ <span>My tasks</span></Link></div>}
+{has("tasks.assign")&&<div className="portal-nav-group"><small>OPERATIONS</small><Link href={`/${locale}/dashboard/admin/tasks`}>☑ <span>Task queue</span></Link><Link href={`/${locale}/dashboard/admin/orders`}>▤ <span>Orders</span></Link>{has("organizations.view")&&<Link href={`/${locale}/dashboard/admin/organizations`}>◎ <span>Customers</span></Link>}{has("payments.view")&&<Link href={`/${locale}/dashboard/admin/payments`}>◈ <span>Payments</span></Link>}</div>}
+{has("users.view")&&<div className="portal-nav-group"><small>WORKFORCE</small><Link href={`/${locale}/dashboard/admin/users`}>♙ <span>Users & roles</span></Link></div>}
+{roles.includes("SUPERADMIN")&&<div className="portal-nav-group"><small>PLATFORM</small><Link href={`/${locale}/dashboard/admin/roles`}>◇ <span>Roles & permissions</span></Link><Link href={`/${locale}/dashboard/admin/task-types`}>☷ <span>Task types</span></Link><Link href={`/${locale}/dashboard/admin/settings`}>⚙ <span>Platform settings</span></Link></div>}
+</nav><div className="portal-sidebar-foot"><span className="security-dot"/> Private workspace</div></aside>}

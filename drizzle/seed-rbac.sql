@@ -78,3 +78,18 @@ WHERE r.code IN ('ADMIN','OPERATIONS') ON CONFLICT DO NOTHING;
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p ON p.code IN ('tasks.view','tasks.work')
 WHERE r.code IN ('TRANSCRIBER','TRANSLATOR','REVIEWER','QUALITY_REVIEWER') ON CONFLICT DO NOTHING;
+
+
+-- v0.8 portal completion: operational access required by visible Operations links.
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r JOIN permissions p ON p.code IN (
+  'orders.view','orders.manage','orders.assign',
+  'organizations.view','payments.view',
+  'tasks.view','tasks.assign','tasks.manage'
+) WHERE r.code = 'OPERATIONS' ON CONFLICT DO NOTHING;
+
+-- ADMIN needs task operations in addition to the existing administrative baseline.
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r JOIN permissions p ON p.code IN (
+  'tasks.view','tasks.assign','tasks.manage'
+) WHERE r.code = 'ADMIN' ON CONFLICT DO NOTHING;
