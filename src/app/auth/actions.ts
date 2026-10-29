@@ -47,8 +47,9 @@ export async function signup(formData: FormData) {
     redirect(withMessage(`/${locale}/signup`, "error", "Name, email and password are required."));
   }
 
-  if (password.length < 8) {
-    redirect(withMessage(`/${locale}/signup`, "error", "Use a password with at least 8 characters."));
+  const strongPassword = password.length >= 10 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
+  if (!strongPassword) {
+    redirect(withMessage(`/${locale}/signup`, "error", "Password must be 10+ characters and include uppercase, lowercase and a number."));
   }
 
   const supabase = await createClient();
