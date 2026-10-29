@@ -1,0 +1,15 @@
+"use client";
+import { useState } from "react";
+import { createOrderAction } from "./actions";
+
+export function OrderForm({ locale }: { locale: string }) {
+  const [service, setService] = useState("TRANSCRIPTION");
+  return <form action={createOrderAction} className="order-form">
+    <input type="hidden" name="locale" value={locale}/>
+    <label>Service<select name="serviceType" value={service} onChange={(e)=>setService(e.target.value)}><option value="TRANSCRIPTION">Transcription</option><option value="TRANSLATION">Translation</option><option value="WRITING_SUPPORT">Writing support</option></select></label>
+    {service === "TRANSCRIPTION" && <fieldset><legend>Transcription requirements</legend><label className="check-row"><input type="checkbox" name="speakerIdentification"/> Speaker identification</label><label className="check-row"><input type="checkbox" name="timestamps"/> Timestamps</label><p className="form-note">A quality-review task is always added.</p></fieldset>}
+    {service === "TRANSLATION" && <fieldset><legend>Translation requirements</legend><div className="form-grid"><label>Source language<input name="sourceLanguage" placeholder="e.g. English" required/></label><label>Target language<input name="targetLanguage" placeholder="e.g. French" required/></label></div><label>Content type<select name="contentType"><option value="GENERAL_DOCUMENT">General document</option><option value="BOOK">Book</option><option value="MANUSCRIPT">Manuscript</option><option value="ARTICLE">Article</option><option value="ACADEMIC_WRITING">Academic writing</option><option value="WEBSITE">Website</option><option value="BUSINESS_DOCUMENT">Business document</option><option value="LEGAL_DOCUMENT">Legal document</option><option value="TECHNICAL_DOCUMENT">Technical document</option><option value="OTHER">Other</option></select></label><label className="check-row"><input type="checkbox" name="proofreading" defaultChecked/> Proofreading</label><label className="check-row"><input type="checkbox" name="formatting"/> Preserve / reproduce formatting</label><label>Notes<textarea name="notes" rows={4} placeholder="Terminology, audience, style, deadline context…"/></label></fieldset>}
+    {service === "WRITING_SUPPORT" && <fieldset><legend>Writing support</legend><label>Task<select name="writingTask"><option value="ACADEMIC_REVIEW">Academic review</option><option value="RESEARCH_ASSISTANCE">Research assistance</option><option value="LITERATURE_REVIEW_SUPPORT">Literature review support</option><option value="CITATION_FORMATTING">Citation formatting</option><option value="ESSAY_SUPPORT">Essay support</option><option value="ASSIGNMENT_SUPPORT">Assignment support</option><option value="PROOFREADING">Proofreading</option><option value="DOCUMENT_FORMATTING">Document formatting</option></select></label><p className="form-note">Writing support is assistance, review and editing—not submission-ready ghostwriting of assessed work.</p></fieldset>}
+    <button className="button" type="submit">Create order →</button>
+  </form>;
+}

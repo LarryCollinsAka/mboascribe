@@ -7,6 +7,7 @@ export const serviceTypeEnum = pgEnum("service_type", [
   "TRANSLATION",
   "TRANSCRIPTION_TRANSLATION",
   "SUBTITLING",
+  "WRITING_SUPPORT",
 ]);
 
 export const orderStatusEnum = pgEnum("order_status", [

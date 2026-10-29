@@ -10,3 +10,6 @@ export * from "./recordings";
 export * from "./documents";
 export * from "./translation-projects";
 export * from "./payments";
+export * from "./task-types";
+export * from "./work-tasks";
+export * from "./task-assignments";

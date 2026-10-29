@@ -1,13 +1,5 @@
-export type PresignedUpload = {
-  uploadUrl: string;
-  objectKey: string;
-  expiresInSeconds: number;
-};
-
+export type PresignedUpload = { uploadUrl: string; objectKey: string; expiresInSeconds: number };
 export interface ObjectStorage {
-  createPresignedUpload(input: {
-    objectKey: string;
-    contentType: string;
-    expiresInSeconds?: number;
-  }): Promise<PresignedUpload>;
+  createPresignedUpload(input: { objectKey: string; contentType: string; expiresInSeconds?: number }): Promise<PresignedUpload>;
+  exists(objectKey: string): Promise<boolean>;
 }

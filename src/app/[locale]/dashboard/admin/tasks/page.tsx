@@ -1,0 +1,11 @@
+import { eq, inArray } from "drizzle-orm";
+import { notFound, redirect } from "next/navigation";
+import { db } from "@/db";
+import { profileRoles, profiles, roles, taskTypes, workTasks } from "@/db/schema";
+import { locales, type Locale } from "@/i18n/config";
+import { hasPermission } from "@/lib/auth/permissions";
+import { createClient } from "@/lib/supabase/server";
+import { assignTaskAction } from "./actions";
+export const instant=false;
+const workforce=["TRANSCRIBER","TRANSLATOR","REVIEWER","QUALITY_REVIEWER","OPERATIONS","ADMIN","SUPERADMIN"];
+export default async function TaskQueue({params}:{params:Promise<{locale:string}>}){const{locale:raw}=await params;if(!locales.includes(raw as Locale))notFound();const locale=raw as Locale;const supabase=await createClient();const{data}=await supabase.auth.getClaims();const userId=data?.claims?.sub;if(!userId)redirect(`/${locale}/login`);if(!await hasPermission(userId,"tasks.assign"))notFound();const tasks=await db.select({id:workTasks.id,title:workTasks.title,status:workTasks.status,priority:workTasks.priority,type:taskTypes.name,assignee:workTasks.currentAssigneeId}).from(workTasks).innerJoin(taskTypes,eq(workTasks.taskTypeId,taskTypes.id));const workers=await db.selectDistinct({id:profiles.id,name:profiles.displayName,role:roles.code}).from(profiles).innerJoin(profileRoles,eq(profiles.id,profileRoles.profileId)).innerJoin(roles,eq(profileRoles.roleId,roles.id)).where(inArray(roles.code,workforce));return <main className="standalone-page"><a href={`/${locale}/dashboard`}>← Dashboard</a><span className="kicker">Operations</span><h1>Task queue</h1><p>Assign operational work. Every assignment is recorded in assignment history.</p><div className="task-list">{tasks.map(t=><article className="task-card" key={t.id}><small>{t.type} · {t.priority}</small><h2>{t.title}</h2><p>{t.status.replaceAll("_"," ")}</p><form action={assignTaskAction} className="assign-row"><input type="hidden" name="taskId" value={t.id}/><input type="hidden" name="locale" value={locale}/><select name="assigneeId" defaultValue={t.assignee||""} required><option value="" disabled>Select worker</option>{workers.map(w=><option value={w.id} key={`${w.id}-${w.role}`}>{w.name||w.id.slice(0,8)} · {w.role}</option>)}</select><button className="button button-small" type="submit">Assign</button></form></article>)}</div></main>}

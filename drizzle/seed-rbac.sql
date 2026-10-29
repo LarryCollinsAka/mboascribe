@@ -56,3 +56,25 @@ JOIN permissions p ON p.code IN (
 )
 WHERE r.code = 'ADMIN'
 ON CONFLICT DO NOTHING;
+
+-- v0.6 task-domain permissions. Safe to rerun after the original seed.
+INSERT INTO permissions (code, name, description) VALUES
+  ('tasks.view', 'View tasks', 'View tasks permitted by assignment or operational scope.'),
+  ('tasks.work', 'Work on tasks', 'Accept, progress and submit assigned tasks.'),
+  ('tasks.assign', 'Assign tasks', 'Assign and reassign production tasks.'),
+  ('tasks.manage', 'Manage tasks', 'Create, update and cancel production tasks.'),
+  ('task_types.manage', 'Manage task types', 'Create and maintain the operational task catalog.')
+ON CONFLICT (code) DO NOTHING;
+
+-- Keep protected SUPERADMIN exhaustive when new permissions are introduced.
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r CROSS JOIN permissions p WHERE r.code = 'SUPERADMIN'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r JOIN permissions p ON p.code IN ('tasks.view','tasks.assign','tasks.manage')
+WHERE r.code IN ('ADMIN','OPERATIONS') ON CONFLICT DO NOTHING;
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r JOIN permissions p ON p.code IN ('tasks.view','tasks.work')
+WHERE r.code IN ('TRANSCRIBER','TRANSLATOR','REVIEWER','QUALITY_REVIEWER') ON CONFLICT DO NOTHING;

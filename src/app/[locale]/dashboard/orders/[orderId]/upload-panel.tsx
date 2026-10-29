@@ -1,0 +1,7 @@
+"use client";
+import { useState } from "react";
+export function UploadPanel({orderId,kind}:{orderId:string;kind:"recording"|"document"}){
+ const [message,setMessage]=useState(""); const [busy,setBusy]=useState(false);
+ async function upload(file:File){setBusy(true);setMessage("Preparing upload…");try{const presign=await fetch("/api/uploads/presign",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({orderId,kind,filename:file.name,mimeType:file.type,sizeBytes:file.size})});const signed=await presign.json();if(!presign.ok)throw new Error(signed.error||"Could not prepare upload");setMessage("Uploading privately to R2…");const put=await fetch(signed.uploadUrl,{method:"PUT",headers:{"content-type":file.type},body:file});if(!put.ok)throw new Error("R2 upload failed");const confirm=await fetch("/api/uploads/confirm",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({orderId,assetId:signed.assetId,kind})});const result=await confirm.json();if(!confirm.ok)throw new Error(result.error||"Could not confirm upload");setMessage("Upload complete. Refreshing…");window.location.reload();}catch(e){setMessage(e instanceof Error?e.message:"Upload failed");}finally{setBusy(false);}}
+ return <div className="upload-box"><strong>Upload source {kind}</strong><input type="file" disabled={busy} onChange={(e)=>{const f=e.target.files?.[0];if(f)void upload(f)}}/><small>{message||"Files upload directly to the private MboaScribe R2 bucket."}</small></div>;
+}
