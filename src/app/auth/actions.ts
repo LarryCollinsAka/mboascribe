@@ -84,3 +84,17 @@ export async function logout(formData: FormData) {
   await supabase.auth.signOut();
   redirect(`/${locale}/login`);
 }
+
+export async function workerSignup(formData: FormData) {
+  const locale = getLocale(formData);
+  const displayName=readText(formData,"displayName"),email=readText(formData,"email"),password=readText(formData,"password");
+  const services=readText(formData,"services"),languages=readText(formData,"languages"),experience=readText(formData,"experience"),availability=readText(formData,"availability"),specializations=readText(formData,"specializations");
+  if(!displayName||!email||!password||!services||!languages) redirect(withMessage(`/${locale}/signup/worker`,"error","Name, email, password, services and languages are required."));
+  if(!(password.length>=10&&/[a-z]/.test(password)&&/[A-Z]/.test(password)&&/\d/.test(password))) redirect(withMessage(`/${locale}/signup/worker`,"error","Password must be 10+ characters and include uppercase, lowercase and a number."));
+  const supabase=await createClient(); const {data,error}=await supabase.auth.signUp({email,password,options:{data:{display_name:displayName,preferred_locale:locale,account_type:"worker"}}});
+  if(error||!data.user) redirect(withMessage(`/${locale}/signup/worker`,"error",error?.message??"Could not create worker account."));
+  const {db}=await import("@/db"); const {profiles,workerApplications}=await import("@/db/schema");
+  await db.insert(profiles).values({id:data.user.id,displayName,preferredLocale:locale}).onConflictDoNothing();
+  await db.insert(workerApplications).values({profileId:data.user.id,services,languages,experience,availability,specializations}).onConflictDoNothing();
+  redirect(withMessage(`/${locale}/login`,"message","Worker application created. Confirm your email. Your work portal will activate after review and approval."));
+}

@@ -93,3 +93,32 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p ON p.code IN (
   'tasks.view','tasks.assign','tasks.manage'
 ) WHERE r.code = 'ADMIN' ON CONFLICT DO NOTHING;
+
+-- v0.9 production workflow permissions
+INSERT INTO permissions (code,name,description) VALUES
+ ('workers.view','View workers','View worker applications, profiles and capabilities.'),
+ ('workers.approve','Approve workers','Approve or reject worker applications.'),
+ ('submissions.review','Review submissions','Review submitted production work.'),
+ ('audit.view','View audit log','View privileged platform audit events.')
+ON CONFLICT (code) DO NOTHING;
+INSERT INTO role_permissions(role_id,permission_id) SELECT r.id,p.id FROM roles r CROSS JOIN permissions p WHERE r.code='SUPERADMIN' ON CONFLICT DO NOTHING;
+INSERT INTO role_permissions(role_id,permission_id) SELECT r.id,p.id FROM roles r JOIN permissions p ON p.code IN ('workers.view','workers.approve','submissions.review') WHERE r.code='ADMIN' ON CONFLICT DO NOTHING;
+INSERT INTO role_permissions(role_id,permission_id) SELECT r.id,p.id FROM roles r JOIN permissions p ON p.code IN ('workers.view','submissions.review') WHERE r.code='OPERATIONS' ON CONFLICT DO NOTHING;
+INSERT INTO role_permissions(role_id,permission_id) SELECT r.id,p.id FROM roles r JOIN permissions p ON p.code='submissions.review' WHERE r.code IN ('REVIEWER','QUALITY_REVIEWER') ON CONFLICT DO NOTHING;
+
+-- Complete baseline task catalog (safe to rerun; fixes earlier partial seeds).
+INSERT INTO task_types(code,name,description,category,is_system,is_active) VALUES
+ ('TRANSCRIPTION','Transcription','Convert speech into written text.','TRANSCRIPTION',true,true),
+ ('TRANSLATION','Translation','Translate content between languages.','TRANSLATION',true,true),
+ ('SPEAKER_IDENTIFICATION','Speaker Identification','Identify and label speakers.','TRANSCRIPTION',true,true),
+ ('TIMESTAMPING','Timestamping','Add requested timestamps.','TRANSCRIPTION',true,true),
+ ('PROOFREADING','Proofreading','Review language and consistency.','QUALITY',true,true),
+ ('QUALITY_REVIEW','Quality Review','Perform final quality review.','QUALITY',true,true),
+ ('DOCUMENT_FORMATTING','Document Formatting','Prepare required document formatting.','PRODUCTION',true,true),
+ ('ACADEMIC_REVIEW','Academic Review','Review academic structure and presentation.','WRITING_SUPPORT',true,true),
+ ('RESEARCH_ASSISTANCE','Research Assistance','Support research and source organization.','WRITING_SUPPORT',true,true),
+ ('LITERATURE_REVIEW_SUPPORT','Literature Review Support','Support literature review organization.','WRITING_SUPPORT',true,true),
+ ('CITATION_FORMATTING','Citation Formatting','Format citations and references.','WRITING_SUPPORT',true,true),
+ ('ESSAY_SUPPORT','Essay Support','Provide learning, editing and writing support.','WRITING_SUPPORT',true,true),
+ ('ASSIGNMENT_SUPPORT','Assignment Support','Provide learning and assignment support.','WRITING_SUPPORT',true,true)
+ON CONFLICT (code) DO UPDATE SET is_active=true;

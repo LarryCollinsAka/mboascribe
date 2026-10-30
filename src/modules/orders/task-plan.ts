@@ -9,16 +9,33 @@ export function buildTaskPlan(input: {
   writingTask?: string;
 }): PlannedTask[] {
   if (input.serviceType === "TRANSCRIPTION") {
-    const tasks: PlannedTask[] = [{ code: "TRANSCRIPTION", title: "Transcribe source recording" }];
-    if (input.speakerIdentification) tasks.push({ code: "SPEAKER_IDENTIFICATION", title: "Identify speakers" });
-    if (input.timestamps) tasks.push({ code: "TIMESTAMPING", title: "Add timestamps" });
-    tasks.push({ code: "QUALITY_REVIEW", title: "Quality review transcription" });
+    const tasks: PlannedTask[] = [
+      { code: "TRANSCRIPTION", title: "Transcribe source recording" },
+    ];
+    if (input.speakerIdentification)
+      tasks.push({
+        code: "SPEAKER_IDENTIFICATION",
+        title: "Identify speakers",
+      });
+    if (input.timestamps)
+      tasks.push({ code: "TIMESTAMPING", title: "Add timestamps" });
+    tasks.push({
+      code: "QUALITY_REVIEW",
+      title: "Quality review transcription",
+    });
     return tasks;
   }
   if (input.serviceType === "TRANSLATION") {
-    const tasks: PlannedTask[] = [{ code: "TRANSLATION", title: "Translate source document" }];
-    if (input.formatting) tasks.push({ code: "DOCUMENT_FORMATTING", title: "Preserve document formatting" });
-    if (input.proofreading) tasks.push({ code: "PROOFREADING", title: "Proofread translation" });
+    const tasks: PlannedTask[] = [
+      { code: "TRANSLATION", title: "Translate source document" },
+    ];
+    if (input.formatting)
+      tasks.push({
+        code: "DOCUMENT_FORMATTING",
+        title: "Preserve document formatting",
+      });
+    if (input.proofreading)
+      tasks.push({ code: "PROOFREADING", title: "Proofread translation" });
     tasks.push({ code: "QUALITY_REVIEW", title: "Quality review translation" });
     return tasks;
   }
